@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:twillo_strip_down/business/models/task.dart';
+import 'package:twillo_strip_down/services/session_notifier.dart';
 
 class TwilloCardList extends StatefulWidget {
   const TwilloCardList({Key? key}) : super(key: key);
@@ -9,57 +12,71 @@ class TwilloCardList extends StatefulWidget {
 
 class _TwilloCardListState extends State<TwilloCardList> {
   List<TwilloCard> _cards = [];
-
   int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          _cards.length > 0
-              ? Expanded(
-                  child: ReorderableListView.builder(
-                    buildDefaultDragHandles: false,
-                    itemBuilder: (context, index) => _cards[index],
-                    itemCount: _cards.length,
-                    onReorder: (int oldIndex, int newIndex) {
-                      setState(() {
+    return Consumer(builder: (context, watch, child) {
+      final provider = watch(taskProvider.notifier);
+      List<Task> taskList = provider.taskList;
+
+      _cards = List.generate(
+        taskList.length,
+        (index) {
+          _currentIndex++;
+          return TwilloCard(
+            onAddCard: _addCard,
+            index: index,
+            key: ValueKey(_currentIndex),
+          );
+        },
+      );
+
+      return Container(
+        width: MediaQuery.of(context).size.width,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            _cards.length > 0
+                ? Expanded(
+                    child: ReorderableListView.builder(
+                      buildDefaultDragHandles: false,
+                      itemBuilder: (context, index) => _cards[index],
+                      itemCount: _cards.length,
+                      onReorder: (int oldIndex, int newIndex) {
                         if (newIndex > oldIndex) newIndex -= 1;
 
                         final oldCard = _cards.removeAt(oldIndex);
                         _cards.insert(newIndex, oldCard);
-                      });
-                    },
-                  ),
-                )
-              : Container(),
-          if (_cards.length == 0)
-            TextButton.icon(
-              onPressed: _onAddCard,
-              icon: Icon(Icons.add),
-              label: Text('Add card to list'),
-            )
-        ],
-      ),
-    );
-  }
-
-  /// Action to be taken when a card is to be added to the Card list.
-  void _onAddCard() {
-    setState(() {
-      _cards.add(
-        TwilloCard(
-          key: Key('$_currentIndex'),
-          onAddCard: _onAddCard,
-          index: _currentIndex,
+                      },
+                    ),
+                  )
+                : Container(),
+            if (_cards.length == 0)
+              TextButton.icon(
+                onPressed: _addCard,
+                icon: Icon(Icons.add),
+                label: Text('Add card to list'),
+              )
+          ],
         ),
       );
-
-      _currentIndex++;
     });
+  }
+
+  void _addCard() {
+    context.read(taskProvider).add(
+          Task(title: 'testing', description: 'testing'),
+        );
+
+    _cards.add(
+      TwilloCard(
+        onAddCard: _addCard,
+        index: _currentIndex,
+        key: ValueKey(_currentIndex),
+      ),
+    );
+    setState(() {});
   }
 }
 
@@ -70,6 +87,8 @@ class TwilloCard extends StatelessWidget {
     @required this.onAddCard,
     @required this.index,
     this.onDeleteCard,
+    this.title = '',
+    this.description = '',
   }) : super(key: key);
 
   /// Callback to add a card.
@@ -80,6 +99,10 @@ class TwilloCard extends StatelessWidget {
 
   /// Callback to delete a card.
   final ValueSetter<int>? onDeleteCard;
+
+  final String title;
+
+  final String description;
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +136,7 @@ class TwilloCard extends StatelessWidget {
                 child: TextField(
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: 'Example Task',
+                    hintText: title.isEmpty ? 'Sample Text' : title,
                   ),
                 ),
               ),
@@ -123,7 +146,7 @@ class TwilloCard extends StatelessWidget {
                 child: TextField(
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: 'Example Description',
+                    hintText: description.isEmpty ? 'description' : description,
                   ),
                   maxLines: 10,
                 ),

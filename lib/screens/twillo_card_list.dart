@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:twillo_strip_down/screens/twillo_list.dart';
+
+import 'twillo_list.dart';
 
 /// Responsible for holding the list of cards.
 class TwilloList extends StatefulWidget {
@@ -33,7 +34,6 @@ class _TwilloListState extends State<TwilloList> {
 
               final remainingCards = _twilloList.removeAt(oldIndex);
               _twilloList.insert(newIndex, remainingCards);
-              // setState(() {});
             },
           ),
         ),

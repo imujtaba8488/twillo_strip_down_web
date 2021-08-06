@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:twillo_strip_down/screens/twillo_card_list.dart';
+import 'twillo_card_list.dart';
 
 /// Home screen may house elements other than just list of cards.
 class HomeScreen extends StatelessWidget {
